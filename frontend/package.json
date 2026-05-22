@@ -1,0 +1,30 @@
+{
+  "name": "pharmacy-inventory-frontend",
+  "version": "1.0.0",
+  "description": "Cloud-based Pharmacy Inventory Management System Frontend",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@react-oauth/google": "^0.13.5",
+    "@tabler/icons-react": "^2.44.0",
+    "axios": "^1.6.0",
+    "framer-motion": "^12.38.0",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
+    "recharts": "^3.8.1",
+    "zustand": "^4.4.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.54.0",
+    "eslint-config-next": "^15.0.0",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.4.1"
+  }
+}

@@ -1,6 +1,6 @@
 # Pharmora
 
-> A cloud-based pharmacy inventory management system built for modern healthcare operations. Designed to help pharmacies track stock, manage sales, monitor expiries, and make data-driven decisions — all from a single dashboard.
+A cloud-based pharmacy inventory management system built for modern healthcare operations. Designed to help pharmacies track stock, manage sales, monitor expiries, and make data-driven decisions — all from a single dashboard.
 
 ---
 
@@ -8,7 +8,7 @@
 
 | Layer | Technology |
 |---|---|
-| Frontend | Next.js 15, Tailwind CSS, Zustand, Framer Motion |
+| Frontend | Next.js, Tailwind CSS, Zustand, Framer Motion |
 | Backend | Node.js, Express.js, MongoDB Atlas |
 | Auth | JWT + Google OAuth 2.0 |
 | AI | Groq API (Llama 3.3) |
@@ -25,7 +25,6 @@
 - **Reports & Analytics** — Revenue trends, top-selling products, category breakdowns
 - **Notifications** — Real-time low stock and expiry alerts with a notification center
 - **User Management** — Role-based access (Admin / Staff) with device session tracking
-- **Theme Support** — Full dark and light mode with persistent preference
 
 ---
 
@@ -88,6 +87,3 @@ Pharmora/
 
 ---
 
-## License
-
-MIT © [Daksh1685](https://github.com/Daksh1685)

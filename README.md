@@ -1,6 +1,6 @@
 # Pharmora
 
-A cloud-based pharmacy inventory management system built for modern healthcare operations. Designed to help pharmacies track stock, manage sales, monitor expiries, and make data-driven decisions — all from a single dashboard.
+A cloud-based pharmacy inventory management system built for modern healthcare operations. Designed to help pharmacies track stock, manage sales, monitor expiries, and make data-driven decisions all from a single dashboard.
 
 ---
 

@@ -30,6 +30,13 @@ A cloud-based pharmacy inventory management system built for modern healthcare o
 
 ## Getting Started
 
+### Clone the Repository
+
+```bash
+git clone https://github.com/your-username/pharmora.git
+cd pharmora
+```
+
 ### Backend
 ```bash
 cd backend
@@ -48,41 +55,22 @@ npm run dev               # runs on http://localhost:3000
 
 ---
 
-## Environment Variables
-
-### Backend `.env`
-| Variable | Description |
-|---|---|
-| `MONGODB_URI` | MongoDB Atlas connection string |
-| `JWT_SECRET` | Secret key for signing JWTs |
-| `JWT_EXPIRY` | Token expiry duration (e.g. `7d`) |
-| `GROQ_API_KEY` | Groq API key for AI features |
-| `CORS_ORIGIN` | Allowed frontend origin |
-
-### Frontend `.env.local`
-| Variable | Description |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | Backend API base URL |
-| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google OAuth client ID |
-
----
-
 ## Project Structure
 
 ```
 Pharmora/
 ├── backend/
-│   ├── controllers/     # Route handlers
-│   ├── models/          # Mongoose schemas
-│   ├── routes/          # API route definitions
-│   ├── middleware/       # Auth, error handling, CORS
-│   └── utils/           # FIFO logic, logger, notifications
+│   ├── controllers/     
+│   ├── models/          
+│   ├── routes/          
+│   ├── middleware/       
+│   └── utils/           
 └── frontend/
-    ├── src/app/          # Next.js App Router pages
-    ├── src/components/  # UI components
-    ├── src/store/        # Zustand state stores
-    ├── src/services/    # API service layer
-    └── src/hooks/        # Custom React hooks
+    ├── src/app/          
+    ├── src/components/  
+    ├── src/store/        
+    ├── src/services/   
+    └── src/hooks/        
 ```
 
 ---

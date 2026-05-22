@@ -1,0 +1,74 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+/.next/
+/out/
+/build/
+
+# Production
+/build
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+.DS_Store
+*.pem
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+/coverage
+.pnp.js
+/.pnp
+
+# Cleanup temp (local only, not for GitHub)
+_cleanup_temp/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*~*.swo*.swp.idea.vscode# IDE.env.*.local.env.local# Local env filesyarn-error.log*yarn-debug.log*npm-debug.log*# Debug*.pem.DS_Store# Misc/build# Production/out//.next/# Next.js/coverage# Testing.pnp.js/.pnp/node_modules

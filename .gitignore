@@ -1,0 +1,17 @@
+# Cleanup temp (local only)
+_cleanup_temp/
+
+# Stray local docs
+DEBUG_SUMMARY.md
+ORDERS_VS_SALES_EXPLANATION.md
+STATS_CARDS_UPDATE.md
+SYSTEM_FLOW_EXPLANATION.md
+USER_JOURNEY_GUIDE.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

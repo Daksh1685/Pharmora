@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import useAuthStore from '@/store/authStore';
 import useMedicineStore from '@/store/medicineStore';

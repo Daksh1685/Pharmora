@@ -9,21 +9,27 @@ const NotificationCenter = () => {
   const removeNotification = useUIStore((state) => state.removeNotification);
   const [backendStatus, setBackendStatus] = useState('unknown'); // 'online' | 'offline' | 'unknown'
 
-  // Poll backend health every 30 seconds
   useEffect(() => {
+    let mounted = true;
+
     const checkBackend = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-        const response = await fetch(`${apiUrl}/health`, { signal: AbortSignal.timeout(4000) });
-        setBackendStatus(response.ok ? 'online' : 'offline');
+        const response = await fetch(`${apiUrl}/health`, { signal: AbortSignal.timeout(15000) });
+        if (mounted) setBackendStatus(response.ok ? 'online' : 'offline');
       } catch {
-        setBackendStatus('offline');
+        if (mounted) setBackendStatus('offline');
       }
     };
 
-    checkBackend();
-    const interval = setInterval(checkBackend, 30000);
-    return () => clearInterval(interval);
+    // Grace period: wait 10s before first check so Render can warm up
+    const initialDelay = setTimeout(checkBackend, 10000);
+    const interval = setInterval(checkBackend, 60000);
+    return () => {
+      mounted = false;
+      clearTimeout(initialDelay);
+      clearInterval(interval);
+    };
   }, []);
 
   return (
@@ -33,8 +39,8 @@ const NotificationCenter = () => {
         <div className="flex items-center gap-3 p-4 rounded-xl shadow-xl bg-red-600 text-white pointer-events-auto border border-red-700">
           <IconWifiOff size={18} className="flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-bold">Backend Offline</p>
-            <p className="text-xs opacity-90 mt-0.5">Run <code className="bg-red-800 px-1 rounded">npm run dev</code> in the backend folder</p>
+            <p className="text-sm font-bold">Server Warming Up</p>
+            <p className="text-xs opacity-90 mt-0.5">Backend is starting, please wait a moment...</p>
           </div>
         </div>
       )}

@@ -47,5 +47,4 @@ const seed = async () => {
     process.exit(1);
   }
 };
-
 connectDB().then(() => seed());

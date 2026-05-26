@@ -1,5 +1,6 @@
 
 const Groq = require('groq-sdk');
+const mongoose = require('mongoose');
 const Medicine = require('../models/Medicine');
 const Batch = require('../models/Batch');
 const Sale = require('../models/Sale');
@@ -10,11 +11,14 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 async function gatherInventoryContext(userId) {
   try {
-    
-    const allMedicines = await Medicine.find({ addedBy: userId }).sort({ name: 1 }).lean();
-    
+    // Convert userId to ObjectId to prevent type mismatch in aggregation pipelines
+    const userObjectId = new mongoose.Types.ObjectId(userId);
+
+    const allMedicines = await Medicine.find({ addedBy: userObjectId }).sort({ name: 1 }).lean();
+
+    // Filter by user FIRST in $match for correctness and performance
     const medicineStocks = await Batch.aggregate([
-      { $match: { status: 'active', addedBy: userId } },
+      { $match: { status: 'active', addedBy: userObjectId } },
       {
         $addFields: {
           daysToExpiry: {
@@ -44,19 +48,27 @@ async function gatherInventoryContext(userId) {
     });
 
     const medicinesWithStock = allMedicines.map(med => {
-      const stock = stockMap[med._id.toString()] || { totalStock: 0, batchCount: 0, minDaysToExpiry: -1, averagePrice: med.price };
+      const stock = stockMap[med._id.toString()] || { totalStock: 0, batchCount: 0, minDaysToExpiry: null, averagePrice: med.price };
       return {
         name: med.name,
         price: med.price || stock.averagePrice || 0,
         quantity: stock.totalStock || 0,
         category: med.category,
-        daysToExpiry: stock.minDaysToExpiry || -1
+        daysToExpiry: stock.minDaysToExpiry
       };
     });
 
-    const lowStockMedicines = medicinesWithStock.filter(m => m.quantity <= 20);
+    // Low stock: only medicines that actually exist for this user
+    const lowStockMedicines = medicinesWithStock.filter(m => m.quantity > 0 && m.quantity <= 20);
 
+    // Expiring batches: user filter FIRST, then compute daysToExpiry
     const expiringBatchesData = await Batch.aggregate([
+      {
+        $match: {
+          status: 'active',
+          addedBy: userObjectId
+        }
+      },
       {
         $addFields: {
           daysToExpiry: {
@@ -71,8 +83,6 @@ async function gatherInventoryContext(userId) {
       },
       {
         $match: {
-          status: 'active',
-          addedBy: userId,
           daysToExpiry: { $lte: 30, $gt: 0 }
         }
       },
@@ -88,7 +98,7 @@ async function gatherInventoryContext(userId) {
     ]);
 
     const recentSales = await Sale.aggregate([
-      { $match: { status: 'completed', soldBy: userId } },
+      { $match: { status: 'completed', soldBy: userObjectId } },
       { $sort: { createdAt: -1 } },
       { $limit: 100 },
       { $unwind: '$medicines' },
@@ -106,7 +116,7 @@ async function gatherInventoryContext(userId) {
     ]);
 
     const stockSummary = await Batch.aggregate([
-      { $match: { status: 'active', addedBy: userId } },
+      { $match: { status: 'active', addedBy: userObjectId } },
       {
         $group: {
           _id: null,
@@ -131,18 +141,50 @@ async function gatherInventoryContext(userId) {
 }
 
 function buildSystemPrompt(context) {
-  
+
+  // ── EMPTY INVENTORY GUARD ──────────────────────────────────────────────────
+  // If this user has no medicines, return a strict prompt that forbids the AI
+  // from fabricating any inventory data whatsoever.
+  if (context.allMedicines.length === 0) {
+    return `You are an intelligent Pharmacy Inventory Management AI Assistant.
+
+**CRITICAL — EMPTY INVENTORY:**
+This pharmacy account currently has ZERO medicines in its inventory.
+• Total Medicines: 0
+• Total Stock: 0 units
+• Inventory Value: ₹0
+• Low Stock Items: 0
+• Out of Stock: 0
+• Expiring Soon: 0 batches
+• Top Sellers: No sales data
+
+**STRICT RULES — YOU MUST FOLLOW THESE:**
+1. DO NOT invent, guess, or hallucinate any medicine names, quantities, prices, or expiry dates.
+2. DO NOT reference any medicines that are not in the inventory above.
+3. For ANY question about medicines, stock, expiry, or sales — state clearly that the inventory is empty.
+4. Guide the user to add medicines via the Medicines section first.
+5. ALL prices in Indian Rupees (₹), NEVER dollars ($).`;
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   const medicinesList = context.allMedicines.map((m, idx) => {
     const stock = m.quantity || 0;
     const status = stock === 0 ? '(OUT OF STOCK)' : `(${stock} units)`;
     return `${idx + 1}. ${m.name} - ₹${(m.price || 0).toFixed(0)} ${status}`;
   }).join('\n');
 
-  const lowStockList = context.lowStockMedicines.length > 0 
-    ? context.lowStockMedicines.map((m, i) => `${m.name} (${m.quantity} units)`).join(', ')
+  const lowStockList = context.lowStockMedicines.length > 0
+    ? context.lowStockMedicines.map((m) => `${m.name} (${m.quantity} units)`).join(', ')
     : 'None';
 
-  return `You are an intelligent Pharmacy Inventory Management AI Assistant. You have real-time inventory data.
+  const expiryList = context.expiringBatches.length > 0
+    ? context.expiringBatches.map((b) => {
+        const medicineName = b.medicineDetails?.[0]?.name || 'Unknown';
+        return `${medicineName} (${b.daysToExpiry} days, qty: ${b.quantity})`;
+      }).join(', ')
+    : 'None within 30 days';
+
+  return `You are an intelligent Pharmacy Inventory Management AI Assistant. You have real-time inventory data for THIS user's pharmacy only.
 
 **RESPONSE FORMAT (CRITICAL):**
 - When user asks for "list of medicines" or "medicines in inventory" - PROVIDE COMPLETE LIST with all medicines
@@ -152,6 +194,7 @@ function buildSystemPrompt(context) {
 - Avoid long paragraphs - use short sentences
 - ALL prices in Indian Rupees (₹), NEVER dollars ($)
 - Keep non-list responses UNDER 500 words
+- DO NOT invent or hallucinate any medicine names, quantities, or prices not listed below
 
 **COMPLETE MEDICINE INVENTORY (Total: ${context.allMedicines.length} medicines):**
 ${medicinesList}
@@ -160,19 +203,21 @@ ${medicinesList}
 • Total Medicines: ${context.allMedicines.length}
 • Total Stock: ${context.inventorySummary.totalUnits} units
 • Inventory Value: ₹${(context.inventorySummary.totalValue || 0).toFixed(0)}
-• Low Stock Items: ${context.lowStockMedicines.length}
+• Low Stock Items (≤20 units): ${context.lowStockMedicines.length}
 • Out of Stock: ${context.allMedicines.filter(m => m.quantity === 0).length}
-• Expiring Soon: ${context.expiringBatches.length} batches
+• Expiring Within 30 Days: ${context.expiringBatches.length} batches
 
 **Quick Reference:**
 - Low Stock: ${lowStockList}
-- Top Sellers: ${context.topSellingMedicines.length > 0 ? context.topSellingMedicines.slice(0, 3).map(m => m.medicineName).join(', ') : 'No data'}
+- Expiring Soon: ${expiryList}
+- Top Sellers: ${context.topSellingMedicines.length > 0 ? context.topSellingMedicines.slice(0, 3).map(m => m.medicineName).join(', ') : 'No sales data yet'}
 
 **Your Role:**
-- Provide direct answers to user queries
+- Provide direct answers to user queries using ONLY the data above
 - When asked for "list" or "inventory" - show COMPLETE medicine list with quantities
 - Give specific numbers and percentages
 - Recommend actions based on data
+- NEVER reference medicines not listed in the COMPLETE MEDICINE INVENTORY above
 
 Special Instructions:
 - If user asks "what medicines" or "list medicines" or "inventory" - ALWAYS provide the COMPLETE MEDICINE INVENTORY list above

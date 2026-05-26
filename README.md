@@ -23,7 +23,7 @@ A cloud based pharmacy inventory management system built for modern healthcare o
 - **Batch & Expiry Management** — Track medicine batches and get alerts before they expire
 - **AI Assistant** — Chat with an AI trained on your inventory data for instant insights
 - **Reports & Analytics** — Revenue trends, top-selling products, category breakdowns
-- **Notifications** — Real-time low stock and expiry alerts with a notification center
+- **Notifications** — Real time low stock and expiry alerts with a notification center
 - **User Management** — Role-based access (Admin / Staff) with device session tracking
 
 ---

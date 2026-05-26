@@ -20,13 +20,11 @@ export default function LoginPage() {
     try {
       const response = await authService.login(formData.email, formData.password);
 
-      // Store JWT token
+      
       authService.setToken(response.token);
-
-      // Update auth store
+      
       setUser(response.user);
 
-      // Redirect to dashboard
       router.push(ROUTES.DASHBOARD);
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Login failed. Please try again.';
